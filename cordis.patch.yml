@@ -2,3 +2,4 @@
 - insert:
     - id: llm-huawei-codeagent
       name: 'dsh-llm-huawei-codeagent'
+      disabled: !!js "[...ctx.loader.entries()].some((e) => e.options.name === 'dsh-llm-huawei-codeagent' && e.options.id !== 'llm-huawei-codeagent' && !e.disabled)"
