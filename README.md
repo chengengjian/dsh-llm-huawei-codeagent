@@ -9,7 +9,7 @@ This package targets the DSH 0.1.5 line and the 0.1.6-alpha.1 runtime. The DSH r
 ## Install from GitHub
 
 ```bash
-dsh plugin --profile web add github:chengengjian/dsh-llm-huawei-codeagent#v0.1.1
+dsh plugin --profile web add github:chengengjian/dsh-llm-huawei-codeagent#v0.1.3
 ```
 
 Restart DSH Web after installing. The package's `dsh` manifest and `cordis.patch.yml` automatically add the provider to the profile bundle; no manual `cordis.yml` edit is required.
@@ -26,7 +26,9 @@ The default credential reference is `HUAWEI_API_KEY`. Credentials are stored by 
 
 Optional settings are `service` (`codeagent` or `codemate`), `zone` (`green` or `yellow`), `baseURL`, `models`, `streamIdleTimeoutMs`, and `retryPolicy`.
 
-The default upstream endpoints are Huawei internal services. The DSH runtime must have the required network route, DNS/hosts mapping, proxy, and CA trust configured by the deployment environment.
+The default upstream endpoints are Huawei internal services. The DSH runtime must route them through its configured HTTP proxy. This plugin uses a provider-scoped Undici dispatcher that accepts the Huawei internal certificate chain only for HTTPS endpoints under `huawei.com`; it does not change process-wide TLS verification or `/etc/hosts`.
+
+Disabling certificate verification allows a network intermediary to impersonate a Huawei endpoint and observe login credentials or tokens. Importing the official BPIT CA chain into the DSH trust store remains the preferred production configuration; the scoped dispatcher is a compatibility measure for environments where that chain is unavailable.
 
 ## What is included
 

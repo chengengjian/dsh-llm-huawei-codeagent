@@ -16,8 +16,8 @@
  *   `authToken`, injected as the `x-auth-token` header.
  * - Business headers: the upstream requires several CodeAgent-specific
  *   headers (`app-id`, `User-Agent: codeagent`, `plugin-version`, etc.).
- * - SSL: the Huawei internal endpoints use self-signed certificates, so
- *   TLS verification is disabled for upstream requests.
+ * - TLS: Huawei requests use a provider-scoped proxy dispatcher that accepts
+ *   the internal certificate chain without changing process-wide TLS policy.
  *
  * @module dsh-llm-huawei-codeagent/adapter
  */

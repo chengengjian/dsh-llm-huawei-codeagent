@@ -17,6 +17,7 @@
  */
 
 import { LlmError } from '@deepseek-ai/dsh-llm'
+import { huaweiFetch } from './transport.ts'
 import type { WireLoginResponse } from './types.ts'
 
 /** Login API endpoint for Huawei IDEA secureLogin. */
@@ -138,7 +139,7 @@ export class HuaweiTokenManager {
   private async doLogin(userId: string, userPwd: string): Promise<TokenData> {
     let response: Response
     try {
-      response = await fetch(TOKEN_REFRESH_URL, {
+      response = await huaweiFetch(TOKEN_REFRESH_URL, {
         method: 'POST',
         headers: {
           'X-Language': 'en',

@@ -1,5 +1,4 @@
 
-import { readFileSync, appendFileSync } from 'node:fs'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { LlmError, resolveRetryPolicy, RetryPolicySchema } from '@deepseek-ai/dsh-llm'
@@ -213,49 +212,6 @@ function createCredentialResolver(
 }
 
 /**
- * Huawei internal domain → IP mapping for DNS bypass. The container cannot
- * resolve these domains through its DNS resolver; appending them to
- * `/etc/hosts` lets `fetch()` connect by hostname while TLS SNI still uses
- * the real domain (because fetch resolves the hostname → /etc/hosts → IP,
- * but the TLS layer reads the original hostname for SNI).
- */
-const DNS_BYPASS: ReadonlyArray<readonly [ip: string, hostname: string]> = [
-  ['7.222.196.152', 'rnd-idea-api.huawei.com'],
-  ['7.215.72.115', 'snapengine.cida.cce.prod-szv-g.dragon.tools.huawei.com'],
-  ['7.215.72.115', 'snapengine.cida.cce.prod-szv-y.dragon.tools.huawei.com'],
-  ['7.215.72.115', 'snapengine.codemate.cce.prod-kwe-g.dragon.tools.huawei.com'],
-  ['7.215.72.115', 'snapengine.codemate.cce.prod-kwe-y.dragon.tools.huawei.com'],
-]
-
-/**
- * Append Huawei internal domains to `/etc/hosts` so `fetch()` can resolve
- * them. Idempotent: lines already present are skipped. The platform's
- * container runtime may not use the Docker ENTRYPOINT (K8s overrides it
- * with its own command), so this runs from `apply()` rather than an
- * entrypoint script. Also sets `NODE_TLS_REJECT_UNAUTHORIZED=0` because
- * the Huawei internal endpoints use self-signed certificates.
- */
-function ensureNetworkBypass(): void {
-  try {
-    const hosts = readFileSync('/etc/hosts', 'utf-8')
-    const missing = DNS_BYPASS.filter(([, hostname]) =>
-      !new RegExp(`\\s${hostname.replace(/\./g, '\\.')}\\b`).test(hosts),
-    )
-    if (missing.length > 0) {
-      appendFileSync('/etc/hosts', '\n' + missing.map(([ip, hostname]) => `${ip} ${hostname}`).join('\n') + '\n')
-    }
-  } catch {
-    // Read-only /etc/hosts (e.g. ConfigMap mount) — the domains may already
-    // be present or the platform has its own DNS solution; nothing to do.
-  }
-  // The env var must be set before the first TLS handshake. Setting it here
-  // covers the case where the ENTRYPOINT was bypassed.
-  if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === undefined) {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
-  }
-}
-
-/**
  * Answer the Models page "Fetch available models" action. The adapter
  * already knows its catalog, so this returns the configured model list
  * directly — no network call needed. A route the adapter ships (provider
@@ -278,10 +234,6 @@ function discoverModels(
 }
 
 export function apply(ctx: Context, config: Config): void {
-  // Ensure Huawei internal domains resolve and TLS bypass is active before
-  // any request fires. Safe to call multiple times (idempotent).
-  ensureNetworkBypass()
-
   let current: () => Config = () => config
   let lastRaw: Config | undefined
   let lastGood: ResolvedHuaweiOptions | undefined
