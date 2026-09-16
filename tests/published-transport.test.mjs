@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 const source = await readFile(new URL('../src/transport.ts', import.meta.url), 'utf8')
+const pluginSource = await readFile(new URL('../src/index.ts', import.meta.url), 'utf8')
 const bundle = await readFile(new URL('../lib/index.js', import.meta.url), 'utf8')
 
 test('published transport scopes insecure TLS to Huawei requests', () => {
@@ -34,4 +35,11 @@ test('published bundle uses the CodeAgent CLI catalog rather than guessing a mod
   assert.match(bundle, /routModels/)
   assert.match(bundle, /modalities/)
   assert.doesNotMatch(bundle, /chat\\\/completions.*models/)
+})
+
+test('empty modality selections defer to model catalog discovery', () => {
+  for (const text of [pluginSource, bundle]) {
+    assert.doesNotMatch(text, /inputModalities:\s*z\.array\([^\n]+\)\.min\(1\)/)
+    assert.match(text, /model\.inputModalities\.length === 0/)
+  }
 })

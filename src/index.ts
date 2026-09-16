@@ -91,7 +91,10 @@ const catalogModel: z<HuaweiCatalogModel> = z.object({
   contextWindow: z.number().step(1).min(1),
   maxTokens: z.number().step(1).min(1),
   maxInputTokens: z.number().step(1).min(1),
-  inputModalities: z.array(z.union(MODEL_MODALITIES)).min(1),
+  // The settings editor serializes an untouched optional multi-select as an
+  // empty array. Treat that as "not configured" so catalog discovery can
+  // still supply the upstream modalities.
+  inputModalities: z.array(z.union(MODEL_MODALITIES)),
 })
 
 export const Config: z<Config> = z.object({
@@ -154,7 +157,9 @@ function resolveModels(models: readonly HuaweiCatalogModel[] | undefined): Huawe
       ...model.contextWindow === undefined ? {} : { contextWindow: model.contextWindow },
       ...model.maxTokens === undefined ? {} : { maxTokens: model.maxTokens },
       ...model.maxInputTokens === undefined ? {} : { maxInputTokens: model.maxInputTokens },
-      ...model.inputModalities === undefined ? {} : { inputModalities: [...model.inputModalities] },
+      ...model.inputModalities === undefined || model.inputModalities.length === 0
+        ? {}
+        : { inputModalities: [...model.inputModalities] },
     }
   })
 }
