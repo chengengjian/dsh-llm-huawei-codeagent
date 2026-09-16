@@ -1,0 +1,4 @@
+# Mount the provider when this package is added to a DSH profile.
+- insert:
+    - id: llm-huawei-codeagent
+      name: 'dsh-llm-huawei-codeagent'

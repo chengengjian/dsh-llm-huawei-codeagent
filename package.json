@@ -1,0 +1,53 @@
+{
+  "name": "dsh-llm-huawei-codeagent",
+  "version": "0.1.0",
+  "description": "Huawei CodeAgent/CodeMate LLM provider for DeepSeek Harness",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chengengjian/dsh-llm-huawei-codeagent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chengengjian/dsh-llm-huawei-codeagent/issues"
+  },
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-llm": ">=0.1.5-rc.1 <0.1.6 || >=0.1.6-alpha.1 <0.2.0",
+    "@deepseek-ai/dsh-credentials": ">=0.1.5-rc.1 <0.1.6 || >=0.1.6-alpha.1 <0.2.0",
+    "@deepseek-ai/dsh-settings": ">=0.1.5-rc.1 <0.1.6 || >=0.1.6-alpha.1 <0.2.0",
+    "@deepseek-ai/dsh-timeout": ">=0.1.5-rc.1 <0.1.6 || >=0.1.6-alpha.1 <0.2.0",
+    "@deepseek-ai/dsh-invariants": ">=0.1.5-rc.1 <0.1.6 || >=0.1.6-alpha.1 <0.2.0",
+    "@deepseek-ai/dsh-util-values": ">=0.1.5-rc.1 <0.1.6 || >=0.1.6-alpha.1 <0.2.0",
+    "@deepseek-ai/schemastery": ">=3.18.0 <4"
+  },
+  "dependencies": {
+    "eventsource-parser": "^3.1.0"
+  }
+}
