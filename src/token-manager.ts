@@ -5,9 +5,8 @@
  * password) to obtain a `cloudDragonTokens.authToken`, caches it for 24 hours,
  * and refreshes on demand (forced or on expiry).
  *
- * The credential arrives as a single `工号:密码` string through the
- * {@link CredentialResolver}; the split on the first colon happens in the
- * resolver, not here, so the manager sees already-separated values.
+ * The account and password arrive as separate values through the
+ * {@link CredentialResolver}; the password remains in DSH's credential store.
  *
  * The token is injected as the `x-auth-token` header on every upstream
  * CodeAgent/CodeMate request. The department string (built from userInfo
@@ -104,7 +103,7 @@ export class HuaweiTokenManager {
           return {
             ok: false,
             error: new LlmError(
-              'huawei-codeagent: 工号或密码未配置，请在 Models 页面的 API Key 字段输入 "工号:密码"',
+              'huawei-codeagent: 工号或密码未配置，请在 Models 页面分别填写工号和密码',
               'MISSING_CREDENTIAL',
             ),
           }
@@ -178,7 +177,7 @@ export class HuaweiTokenManager {
     const token = body.cloudDragonTokens?.authToken
     if (token === undefined || token.length === 0) {
       throw new LlmError(
-        'huawei-codeagent: 域账号密码可能已失效，请在 Models 页面更新 API Key 中的 "工号:密码"',
+        'huawei-codeagent: 域账号密码可能已失效，请在 Models 页面更新工号或密码',
         'AUTH',
       )
     }

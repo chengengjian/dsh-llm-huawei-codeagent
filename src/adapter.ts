@@ -32,6 +32,7 @@ import type {
   LlmModelInfo,
   LlmProviderInfo,
   LlmResolvedModelInfo,
+  ModelModality,
   ResolvedRetryPolicy,
   StreamChunk,
 } from '@deepseek-ai/dsh-llm'
@@ -54,6 +55,10 @@ export interface HuaweiCatalogModel {
   contextWindow?: number
   /** Per-request output cap for this model. */
   maxTokens?: number
+  /** Provider-reported maximum input tokens, retained as catalog metadata. */
+  maxInputTokens?: number
+  /** Input modalities accepted by this model. */
+  inputModalities?: ModelModality[]
 }
 
 /**
@@ -62,8 +67,16 @@ export interface HuaweiCatalogModel {
  * operation.
  */
 export interface HuaweiConnectionOptions {
+  /** Huawei upstream family whose directory protocol should be used. */
+  service: 'codeagent' | 'codemate'
+  /** Network zone used when account metadata does not report one. */
+  zone: 'green' | 'yellow'
   /** Full upstream endpoint URL (including path). */
   baseURL: string
+  /** CodeAgent model-directory endpoint. */
+  modelCatalogURL: string
+  /** Whether the directory should filter the catalog by current-account permission. */
+  filterModelsByPermission: boolean
   /** Advisory models exposed to discovery consumers. */
   models: readonly HuaweiCatalogModel[]
   /** Maximum provider idle time while one stream read is outstanding. */
@@ -78,6 +91,8 @@ export interface HuaweiAdapterOptions {
   options: () => HuaweiConnectionOptions
   /** Token manager that handles login and caching. */
   tokenManager: HuaweiTokenManager
+  /** Resolve live provider metadata for one model, with configured fallback. */
+  resolveCatalogModel?: (model: string, signal?: AbortSignal) => Promise<HuaweiCatalogModel | undefined>
 }
 
 /** Default maximum idle interval while an adapter stream read is outstanding. */
@@ -95,7 +110,7 @@ function modelInfo(provider: string, model: HuaweiCatalogModel): LlmModelInfo {
     id: model.id,
     name: model.name ?? model.id,
     ...model.description === undefined ? {} : { description: model.description },
-    inputModalities: ['text'],
+    inputModalities: model.inputModalities ?? ['text'],
   }
 }
 
@@ -125,7 +140,10 @@ function httpErrorCode(status: number, error?: WireError['error']): string {
  * upstream routing layer to accept the request. The `x-auth-token` is the
  * authToken from the Huawei IDEA secureLogin.
  */
-function buildUpstreamHeaders(tokenData: TokenData): Record<string, string> {
+export function buildUpstreamHeaders(
+  tokenData: TokenData,
+  accept = 'text/event-stream',
+): Record<string, string> {
   return {
     // ── Authentication ──
     'User-Agent': 'codeagent',
@@ -140,7 +158,7 @@ function buildUpstreamHeaders(tokenData: TokenData): Record<string, string> {
 
     // ── Content headers ──
     'content-type': 'application/json',
-    'accept': 'text/event-stream',
+    'accept': accept,
   }
 }
 
@@ -166,13 +184,14 @@ export class HuaweiCodeAgentAdapter extends LlmAdapter {
     return Promise.resolve(this.config.options().models.map(model => modelInfo(provider, model)))
   }
 
-  override resolveModel(
+  override async resolveModel(
     provider: string,
     model: string,
-    _signal?: AbortSignal,
+    signal?: AbortSignal,
   ): Promise<LlmResolvedModelInfo> {
     const connection = this.config.options()
-    const configured = connection.models.find(entry => entry.id === model)
+    const configured = await this.config.resolveCatalogModel?.(model, signal)
+      ?? connection.models.find(entry => entry.id === model)
     const contextWindow = configured?.contextWindow ?? DEFAULT_CONTEXT_WINDOW
     return Promise.resolve({
       ...configured === undefined

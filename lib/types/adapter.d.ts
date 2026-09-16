@@ -22,7 +22,7 @@
  * @module dsh-llm-huawei-codeagent/adapter
  */
 import { LlmAdapter } from '@deepseek-ai/dsh-llm';
-import type { GenerateOptions, LlmModelInfo, LlmProviderInfo, LlmResolvedModelInfo, ResolvedRetryPolicy, StreamChunk } from '@deepseek-ai/dsh-llm';
+import type { GenerateOptions, LlmModelInfo, LlmProviderInfo, LlmResolvedModelInfo, ModelModality, ResolvedRetryPolicy, StreamChunk } from '@deepseek-ai/dsh-llm';
 import type { HuaweiTokenManager } from './token-manager.ts';
 /** One optional model entry advertised by the adapter. */
 export interface HuaweiCatalogModel {
@@ -36,6 +36,10 @@ export interface HuaweiCatalogModel {
     contextWindow?: number;
     /** Per-request output cap for this model. */
     maxTokens?: number;
+    /** Provider-reported maximum input tokens, retained as catalog metadata. */
+    maxInputTokens?: number;
+    /** Input modalities accepted by this model. */
+    inputModalities?: ModelModality[];
 }
 /**
  * Validated connection facts for one operation. The plugin's
@@ -43,8 +47,16 @@ export interface HuaweiCatalogModel {
  * operation.
  */
 export interface HuaweiConnectionOptions {
+    /** Huawei upstream family whose directory protocol should be used. */
+    service: 'codeagent' | 'codemate';
+    /** Network zone used when account metadata does not report one. */
+    zone: 'green' | 'yellow';
     /** Full upstream endpoint URL (including path). */
     baseURL: string;
+    /** CodeAgent model-directory endpoint. */
+    modelCatalogURL: string;
+    /** Whether the directory should filter the catalog by current-account permission. */
+    filterModelsByPermission: boolean;
     /** Advisory models exposed to discovery consumers. */
     models: readonly HuaweiCatalogModel[];
     /** Maximum provider idle time while one stream read is outstanding. */
@@ -58,6 +70,8 @@ export interface HuaweiAdapterOptions {
     options: () => HuaweiConnectionOptions;
     /** Token manager that handles login and caching. */
     tokenManager: HuaweiTokenManager;
+    /** Resolve live provider metadata for one model, with configured fallback. */
+    resolveCatalogModel?: (model: string, signal?: AbortSignal) => Promise<HuaweiCatalogModel | undefined>;
 }
 /** Default maximum idle interval while an adapter stream read is outstanding. */
 export declare const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 300000;
@@ -76,7 +90,7 @@ export declare class HuaweiCodeAgentAdapter extends LlmAdapter {
     providerInfo(provider: string): LlmProviderInfo;
     providerRetryPolicy(_provider: string): ResolvedRetryPolicy;
     listModels(provider: string): Promise<readonly LlmModelInfo[]>;
-    resolveModel(provider: string, model: string, _signal?: AbortSignal): Promise<LlmResolvedModelInfo>;
+    resolveModel(provider: string, model: string, signal?: AbortSignal): Promise<LlmResolvedModelInfo>;
     stream(options: GenerateOptions): AsyncIterable<StreamChunk>;
     /**
      * Execute the upstream request and translate the SSE stream. On a 401

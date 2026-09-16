@@ -18,8 +18,20 @@ test('published transport scopes insecure TLS to Huawei requests', () => {
 test('all provider network calls use the scoped transport', async () => {
   const tokenManager = await readFile(new URL('../src/token-manager.ts', import.meta.url), 'utf8')
   const adapter = await readFile(new URL('../src/adapter.ts', import.meta.url), 'utf8')
+  const modelCatalog = await readFile(new URL('../src/model-catalog.ts', import.meta.url), 'utf8')
   assert.equal(tokenManager.match(/huaweiFetch\(/g)?.length, 1)
   assert.equal(adapter.match(/huaweiFetch\(/g)?.length, 2)
+  assert.equal(modelCatalog.match(/huaweiFetch\(/g)?.length, 2)
   assert.doesNotMatch(tokenManager, /\bfetch\(/)
   assert.doesNotMatch(adapter, /\bfetch\(/)
+  assert.doesNotMatch(modelCatalog, /\bfetch\(/)
+})
+
+test('published bundle uses the CodeAgent CLI catalog rather than guessing a models path', () => {
+  assert.match(bundle, /codeagentcli\.rnd\.huawei\.com\/codeAgentPro\/chat\/modles/)
+  assert.match(bundle, /codeAgentPro\/auth\/internal\/getUserDetail/)
+  assert.match(bundle, /checkUserPermission/)
+  assert.match(bundle, /routModels/)
+  assert.match(bundle, /modalities/)
+  assert.doesNotMatch(bundle, /chat\\\/completions.*models/)
 })

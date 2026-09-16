@@ -6,6 +6,7 @@ export { DEFAULT_STREAM_IDLE_TIMEOUT_MS, HuaweiCodeAgentAdapter, } from './adapt
 export type { HuaweiAdapterOptions, HuaweiCatalogModel, HuaweiConnectionOptions } from './adapter.ts';
 export { HuaweiTokenManager } from './token-manager.ts';
 export type { TokenData, CredentialResolver } from './token-manager.ts';
+export { parseModelCatalog } from './model-catalog.ts';
 export type * from './types.ts';
 export declare const name = "llm-huawei-codeagent";
 export declare const inject: string[];
@@ -16,12 +17,10 @@ export declare const inject: string[];
  * request time (not at plugin load).
  */
 export interface Config {
-    /**
-     * Credential reference (environment-variable name) holding the
-     * `工号:密码` value; defaults to `HUAWEI_API_KEY`. The Models page
-     * derives this from `apiKeyEnv` and writes through `credentials.set`.
-     */
-    apiKeyEnv?: string;
+    /** Huawei domain account/work number. This is configuration, not a secret. */
+    userId?: string;
+    /** Credential reference holding only the Huawei domain password. */
+    passwordEnv?: string;
     /**
      * Huawei internal service to route to. `codeagent` uses the CIDA snapengine
      * endpoint; `codemate` uses the CodeMate snapengine endpoint.
@@ -31,6 +30,10 @@ export interface Config {
     zone?: 'green' | 'yellow';
     /** Full upstream endpoint URL; overrides the zone/service default when set. */
     baseURL?: string;
+    /** CodeAgent CLI model-directory endpoint. */
+    modelCatalogURL?: string;
+    /** Ask the directory to return only models available to the current account. */
+    filterModelsByPermission?: boolean;
     /** Advisory models shown by discovery consumers; defaults to the CodeAgent catalog. */
     models?: HuaweiCatalogModel[];
     /** Maximum provider idle time while one stream read is outstanding (default five minutes). */
