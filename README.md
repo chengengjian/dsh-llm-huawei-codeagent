@@ -4,12 +4,12 @@ Huawei CodeAgent/CodeMate provider plugin for DeepSeek Harness.
 
 ## Compatibility
 
-This package targets the DSH 0.1.5 line and the 0.1.6-alpha.1 runtime. The package declares the supported DSH peer range; do not install it into an unrelated DSH major/minor line.
+This package targets the DSH 0.1.5 line and the 0.1.6-alpha.1 runtime. The DSH runtime packages are supplied by the host profile rather than installed as package dependencies, so the plugin uses the host's Cordis/DSH runtime without duplicate copies. Do not install it into an unrelated DSH major/minor line.
 
 ## Install from GitHub
 
 ```bash
-dsh plugin --profile web add github:chengengjian/dsh-llm-huawei-codeagent#v0.1.0
+dsh plugin --profile web add github:chengengjian/dsh-llm-huawei-codeagent#v0.1.1
 ```
 
 Restart DSH Web after installing. The package's `dsh` manifest and `cordis.patch.yml` automatically add the provider to the profile bundle; no manual `cordis.yml` edit is required.
