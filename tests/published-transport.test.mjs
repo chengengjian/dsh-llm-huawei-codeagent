@@ -43,3 +43,10 @@ test('empty modality selections defer to model catalog discovery', () => {
     assert.match(text, /model\.inputModalities\.length === 0/)
   }
 })
+
+test('credential resolution follows the live settings source', () => {
+  for (const text of [pluginSource, bundle]) {
+    assert.match(text, /createCredentialResolver\(ctx, \(\) => current\(\)\)/)
+    assert.doesNotMatch(text, /createCredentialResolver\(ctx, current\)/)
+  }
+})

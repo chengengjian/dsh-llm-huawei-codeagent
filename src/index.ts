@@ -283,7 +283,11 @@ export function apply(ctx: Context, config: Config): void {
 
   // Build the token manager with a credential resolver that re-reads the
   // current settings snapshot's credential reference per login.
-  const resolveCredentials = createCredentialResolver(ctx, current)
+  // Do not pass `current` itself: installSection replaces that function when
+  // the settings provider attaches. The indirection ensures every login sees
+  // the latest effective settings source rather than the composition-time
+  // config captured during plugin startup.
+  const resolveCredentials = createCredentialResolver(ctx, () => current())
   const tokenManager = new HuaweiTokenManager(resolveCredentials)
   const modelCatalog = new HuaweiModelCatalog(options, tokenManager, (error) => {
     ctx.logger.warn(`llm-huawei-codeagent: model catalog unavailable, using static fallback: ${String(error)}`)

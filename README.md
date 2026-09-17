@@ -9,7 +9,7 @@ This package targets the DSH 0.1.5 line and the 0.1.6-alpha.1 runtime. The DSH r
 ## Install from GitHub
 
 ```bash
-dsh plugin --profile web add github:chengengjian/dsh-llm-huawei-codeagent#v0.2.0
+dsh plugin --profile web add github:chengengjian/dsh-llm-huawei-codeagent#v0.2.2
 ```
 
 Restart DSH Web after installing. The package's `dsh` manifest and `cordis.patch.yml` automatically add the provider to the profile bundle; no manual `cordis.yml` edit is required.
